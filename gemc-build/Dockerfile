@@ -123,7 +123,9 @@ RUN mkdir -p $JLAB_SOFTWARE/ccdb \
     && cp -r $JLAB_SOFTWARE/ccdb/ccdb-$CCDB_VERSION $CCDB_HOME
 
 ## mlibrary
-ENV GIT_SSL_NO_VERIFY false
+ENV GIT_SSL_NO_VERIFY fals
+ENV MLIBRARY_VERSION devel
+ENV MLIBRARY $JLAB_SOFTWARE/mlibrary/$MLIBRARY_VERSION
 
 RUN mkdir -p $JLAB_SOFTWARE/mlibrary \
     && cd $JLAB_SOFTWARE/mlibrary \
@@ -139,6 +141,9 @@ RUN mkdir -p $JLAB_SOFTWARE/mlibrary \
     && make install
 
 ## gemc
+ENV GEMC_VERSION devel
+ENV GEMC $JLAB_SOFTWARE/gemc/$GEMC_VERSION
+
 RUN rm -rf $JLAB_SOFTWARE/gemc/$GEMC_VERSION \
     && mkdir -p $JLAB_SOFTWARE/gemc \
     && cd $JLAB_SOFTWARE/gemc \
@@ -147,6 +152,15 @@ RUN rm -rf $JLAB_SOFTWARE/gemc/$GEMC_VERSION \
     && rm -rf gemc-$GEMC_VERSION.tar.gz \
     && cd $GEMC_VERSION \
     && scons -j$(nproc) LIBRARY=shared OPT=1
+
+## Fields
+RUN mkdir -p $JLAB_ROOT/noarch/data \
+    && cd $JLAB_ROOT/noarch/data \
+    && rm -rf srr* clas12* \
+    && wget http://clasweb.jlab.org/12gev/field_maps/clas12SolenoidFieldMap.dat \
+    && wget http://clasweb.jlab.org/12gev/field_maps/clas12TorusOriginalMap.dat
+
+
 
 
 COPY cshrc /root/.cshrc
