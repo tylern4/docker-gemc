@@ -30,6 +30,5 @@ COPY cshrc /root/.cshrc
 WORKDIR /root/
 ADD https://www.jlab.org/12gev_phys/packages/gcards/clas12.gcard /root/
 ADD https://www.jlab.org/12gev_phys/packages/gcards/experiments.tar /root/
-RUN tar -xvf experiments.tar
 
 ENTRYPOINT ["/bin/tcsh"]
