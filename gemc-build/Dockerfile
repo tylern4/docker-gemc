@@ -95,16 +95,16 @@ RUN mkdir -p $XERCESCROOT \
     && rm -rf $XERCESCROOT/github-source
 
 ## geant4
+#              -DQT_QMAKE_EXECUTABLE=$QTDIR/bin/qmake \
 RUN mkdir -p $G4INSTALL \
     && cd $G4INSTALL \
-    && git clone https://github.com/Geant4/geant4.git github-source \
-    && mkdir build \
-    && cd build \
-    cmake -DGEANT4_USE_OPENGL_X11=ON -DCMAKE_INSTALL_PREFIX=$G4INSTALL \
+    && git clone https://github.com/Geant4/geant4.git $G4INSTALL/github-source \
+    && mkdir -p $G4INSTALL/build \
+    && cd $G4INSTALL/build \
+    && cmake -DGEANT4_USE_OPENGL_X11=ON -DCMAKE_INSTALL_PREFIX=$G4INSTALL \
               -DGEANT4_USE_GDML=ON \
               -DXERCESC_ROOT_DIR=$XERCESCROOT \
               -DGEANT4_USE_QT=ON \
-#              -DQT_QMAKE_EXECUTABLE=$QTDIR/bin/qmake \
               -DCMAKE_INSTALL_DATAROOTDIR=$G4INSTALL/data \
               -DCLHEP_ROOT_DIR=$CLHEP_BASE_DIR \
               -DGEANT4_INSTALL_DATA=$DATA \
@@ -116,6 +116,7 @@ RUN mkdir -p $G4INSTALL \
     && rm -rf $G4INSTALL/github-source
 
 ## EVIO
+ENV EVIO_VERSION 5.1
 RUN mkdir -p $EVIO && cd $EVIO \
     && curl -o evio-$EVIO_VERSION.tar.gz $BASE_URL/evio/evio-$EVIO_VERSION.tar.gz \
     && tar -xvf evio-$EVIO_VERSION.tar.gz --strip-components 1
@@ -143,8 +144,8 @@ RUN mkdir -p $JLAB_SOFTWARE/mysql \
 
 ## CCDB
 RUN git clone https://github.com/JeffersonLab/ccdb.git $CCDB_HOME \
-    cd $CCDB_HOME \
-    scons -j$(nproc)
+    && cd $CCDB_HOME \
+    && scons -j$(nproc)
 
 ENV LD_LIBRARY_PATH $LD_LIBRARY_PATH:$CCDB_HOME/lib
 ENV PATH $PATH:$CCDB_HOME/bin
@@ -158,12 +159,12 @@ RUN cd $MLIBRARY/github-source \
     && mkdir build && cd build \
     && cmake .. -DCMAKE_INSTALL_PREFIX=$MLIBRARY \
     && make -j$(nproc) \
-    && make install && mv $MLIBRARY/include/*/* $MLIBRARY/include/ \
-    && cd $MLIBRARY \
-    && git clone https://github.com/christopherpoole/CADMesh.git cadmesh_git \
-    && mkdir cadmeshBuild \
-    && cd cadmeshBuild \
-    && cmake ../cadmesh -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX:PATH=$MLIBRARY -DCMAKE_PREFIX_PATH=$JLAB_SOFTWARE/geant4/$GEANT4_VERSION \
+    && make install && mv $MLIBRARY/include/*/* $MLIBRARY/include/
+
+ENV CADMESH $JLAB_SOFTWARE/cadmesh
+RUN git clone -b v1.1 https://github.com/christopherpoole/CADMesh.git  $CADMESH/github-source \
+    && mkdir -p $CADMESH/build && cd $CADMESH/build \
+    && cmake $CADMESH/github-source -DCMAKE_CXX_FLAGS=-fPIC -DCMAKE_INSTALL_PREFIX:PATH=$CADMESH -DCMAKE_PREFIX_PATH=$G4INSTALL \
     && make -j$(nproc) \
     && make install
 
@@ -196,79 +197,73 @@ ENV GEMC $JLAB_SOFTWARE/gemc/$GEMC_VERSION
 RUN mkdir -p $GEMC && cd $GEMC \
     && git clone https://github.com/gemc/source.git $GEMC/github-source
 
+COPY gemc.cc $GEMC/github-source/gemc.cc
 COPY CMakeLists_gemc.txt $GEMC/github-source/CMakeLists.txt
-RUN cd $GEMC/github-source \
-    && mkdir build && cd build \
-    && cmake .. -DCMAKE_INSTALL_PREFIX=$GEMC \
-    && make -j$(nproc) \
-    && make install
-
-
-
-#########
-# Warning Banks and Jana installs are real broken....
-# Hacking my way to a solution
-COPY cshrc /root/.cshrc
+###RUN cd $GEMC/github-source \
+###    && mkdir build && cd build \
+###    && cmake .. -DCMAKE_INSTALL_PREFIX=$GEMC \
+###    && make -j$(nproc) \
+###    && make install
 
 ##Banks
-ENV BANKS_VERSION devel
-ENV PYTHONPATH /opt/jlab_software/devel/scons_bm/devel
+#ENV BANKS_VERSION devel
+#ENV PYTHONPATH /opt/jlab_software/devel/scons_bm/devel
 
-RUN mkdir -p $JLAB_SOFTWARE/banks \
-    && cd $JLAB_SOFTWARE/banks \
-    && curl -o banks-$BANKS_VERSION.tar.gz $BASE_URL/banks/banks-$BANKS_VERSION.tar.gz \
-    && tar -xvf banks-$BANKS_VERSION.tar.gz \
-    && rm -rf banks-$BANKS_VERSION.tar.gz \
-    && cd $BANKS_VERSION \
-    && scons -j$(nproc) OPT=1
+#RUN mkdir -p $JLAB_SOFTWARE/banks \
+#    && cd $JLAB_SOFTWARE/banks \
+#    && curl -o banks-$BANKS_VERSION.tar.gz $BASE_URL/banks/banks-$BANKS_VERSION.tar.gz \
+#    && tar -xvf banks-$BANKS_VERSION.tar.gz \
+#    && rm -rf banks-$BANKS_VERSION.tar.gz \
+#    && cd $BANKS_VERSION \
+#    && scons -j$(nproc) OPT=1
 
 ##Jana
-ENV JANA_VERSION devel
-ENV JANA_HOME $JLAB_SOFTWARE/jana/$JANA_VERSION
+#ENV JANA_VERSION devel
+#ENV JANA_HOME $JLAB_SOFTWARE/jana/$JANA_VERSION
 
-RUN git clone https://github.com/JeffersonLab/JANA.git $JANA_HOME \
-      cd $JANA_HOME \
-      scons -j$(nproc)
+#RUN git clone https://github.com/JeffersonLab/JANA.git $JANA_HOME \
+#    && cd $JANA_HOME \
+#    && scons -j$(nproc)
 
 ## Fields
-RUN mkdir -p $JLAB_ROOT/noarch/data \
-   && cd $JLAB_ROOT/noarch/data \
-   && rm -rf srr* clas12* \
-   && curl -o clas12SolenoidFieldMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12SolenoidFieldMap.dat \
-   && curl -o clas12TorusOriginalMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12TorusOriginalMap.dat
+#RUN mkdir -p $JLAB_ROOT/noarch/data \
+#   && cd $JLAB_ROOT/noarch/data \
+#   && rm -rf srr* clas12* \
+#   && curl -o clas12SolenoidFieldMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12SolenoidFieldMap.dat \
+#   && curl -o clas12TorusOriginalMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12TorusOriginalMap.dat
 
 ## Clara/Coatjava
-ENV CLARA_HOME $JLAB_SOFTWARE/clara
-ENV COAT_VER 4a.2.2
-ENV PLUGIN 4a.4.0
+#ENV CLARA_HOME $JLAB_SOFTWARE/clara
+#ENV COAT_VER 4a.2.2
+#ENV PLUGIN 4a.4.0
 
-RUN mkdir -p $CLARA_HOME/jre \
-    && cd $CLARA_HOME \
-    && curl -o clara-cre.tar.gz https://userweb.jlab.org/~gurjyan/clara-cre/clara-cre.tar.gz \
-    && tar xvzf clara-cre.tar.gz \
-    && mv clara-cre/* . \
-    && rm -rf clara-cre.tar.gz clara-cre \
-    && curl -o linux-64.tar.gz https://userweb.jlab.org/~gurjyan/clara-cre/linux-64.tar.gz \
-    && mv linux-64.tar.gz $CLARA_HOME/jre \
-    && cd $CLARA_HOME/jre \
-    && tar xvzf linux-64.tar.gz \
-    && curl -o coatjava-$PLUGIN.tar.gz http://clasweb.jlab.org/clas12offline/distribution/coatjava/coatjava-$PLUGIN.tar.gz \
-    && tar xvzf coatjava-$PLUGIN.tar.gz \
-    && rm -rf coatjava-$PLUGIN.tar.gz \
-    && cd coatjava \
-    && cp -r etc $CLARA_HOME/plugins/clas12/. \
-    && cp -r bin $CLARA_HOME/plugins/clas12/. \
-    && cp -r lib/packages $CLARA_HOME/plugins/clas12/lib/ \
-    && cp -r lib/utils $CLARA_HOME/plugins/clas12/lib/ \
-    && cp  lib/clas/* $CLARA_HOME/plugins/clas12/lib/clas/. \
-    && cp  lib/services/* $CLARA_HOME/plugins/clas12/lib/services/. \
-    && cp $CLARA_HOME/plugins/clas12/etc/services/reconstruction.yaml $CLARA_HOME/plugins/clas12/config/services.yaml \
-    && chmod a+x $CLARA_HOME/bin/*
+#RUN mkdir -p $CLARA_HOME/jre \
+#    && cd $CLARA_HOME \
+#    && curl -o clara-cre.tar.gz https://userweb.jlab.org/~gurjyan/clara-cre/clara-cre.tar.gz \
+#    && tar xvzf clara-cre.tar.gz \
+#    && mv clara-cre/* . \
+#    && rm -rf clara-cre.tar.gz clara-cre \
+#    && curl -o linux-64.tar.gz https://userweb.jlab.org/~gurjyan/clara-cre/linux-64.tar.gz \
+#    && mv linux-64.tar.gz $CLARA_HOME/jre \
+#    && cd $CLARA_HOME/jre \
+#    && tar xvzf linux-64.tar.gz \
+#    && curl -o coatjava-$PLUGIN.tar.gz http://clasweb.jlab.org/clas12offline/distribution/coatjava/coatjava-$PLUGIN.tar.gz \
+#    && tar xvzf coatjava-$PLUGIN.tar.gz \
+#    && rm -rf coatjava-$PLUGIN.tar.gz \
+#    && cd coatjava \
+#    && cp -r etc $CLARA_HOME/plugins/clas12/. \
+#    && cp -r bin $CLARA_HOME/plugins/clas12/. \
+#    && cp -r lib/packages $CLARA_HOME/plugins/clas12/lib/ \
+#    && cp -r lib/utils $CLARA_HOME/plugins/clas12/lib/ \
+#    && cp  lib/clas/* $CLARA_HOME/plugins/clas12/lib/clas/. \
+#    && cp  lib/services/* $CLARA_HOME/plugins/clas12/lib/services/. \
+#    && cp $CLARA_HOME/plugins/clas12/etc/services/reconstruction.yaml $CLARA_HOME/plugins/clas12/config/services.yaml \
+#    && chmod a+x $CLARA_HOME/bin/*
 
 
 
-RUN mkdir -p /group/clas12/gemc/$COAT_VER/experiments
-ADD experiments.tar /group/clas12/gemc/$COAT_VER
+#RUN mkdir -p /group/clas12/gemc/$COAT_VER/experiments
+#ADD experiments.tar /group/clas12/gemc/$COAT_VER
 WORKDIR /root/
 
 ENTRYPOINT ["/bin/tcsh"]

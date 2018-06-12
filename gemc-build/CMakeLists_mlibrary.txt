@@ -4,6 +4,7 @@ project(mlibrary)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 
 include_directories("$ENV{G4INSTALL}/include/Geant4")
+include_directories("$ENV{CLHEP_BASE_DIR}/include")
 include_directories(src)
 
 find_package(Qt5 COMPONENTS Core Widgets Xml REQUIRED)
