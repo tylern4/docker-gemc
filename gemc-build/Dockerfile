@@ -184,38 +184,6 @@ RUN mkdir -p $JLAB_ROOT/noarch/data \
    && curl -o clas12SolenoidFieldMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12SolenoidFieldMap.dat \
    && curl -o clas12TorusOriginalMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12TorusOriginalMap.dat
 
-## Clara/Coatjava
-#ENV CLARA_HOME $JLAB_SOFTWARE/clara
-#ENV COAT_VER 4a.2.2
-#ENV PLUGIN 4a.4.0
-
-#RUN mkdir -p $CLARA_HOME/jre \
-#    && cd $CLARA_HOME \
-#    && curl -o clara-cre.tar.gz https://userweb.jlab.org/~gurjyan/clara-cre/clara-cre.tar.gz \
-#    && tar xvzf clara-cre.tar.gz \
-#    && mv clara-cre/* . \
-#    && rm -rf clara-cre.tar.gz clara-cre \
-#    && curl -o linux-64.tar.gz https://userweb.jlab.org/~gurjyan/clara-cre/linux-64.tar.gz \
-#    && mv linux-64.tar.gz $CLARA_HOME/jre \
-#    && cd $CLARA_HOME/jre \
-#    && tar xvzf linux-64.tar.gz \
-#    && curl -o coatjava-$PLUGIN.tar.gz http://clasweb.jlab.org/clas12offline/distribution/coatjava/coatjava-$PLUGIN.tar.gz \
-#    && tar xvzf coatjava-$PLUGIN.tar.gz \
-#    && rm -rf coatjava-$PLUGIN.tar.gz \
-#    && cd coatjava \
-#    && cp -r etc $CLARA_HOME/plugins/clas12/. \
-#    && cp -r bin $CLARA_HOME/plugins/clas12/. \
-#    && cp -r lib/packages $CLARA_HOME/plugins/clas12/lib/ \
-#    && cp -r lib/utils $CLARA_HOME/plugins/clas12/lib/ \
-#    && cp  lib/clas/* $CLARA_HOME/plugins/clas12/lib/clas/. \
-#    && cp  lib/services/* $CLARA_HOME/plugins/clas12/lib/services/. \
-#    && cp $CLARA_HOME/plugins/clas12/etc/services/reconstruction.yaml $CLARA_HOME/plugins/clas12/config/services.yaml \
-#    && chmod a+x $CLARA_HOME/bin/*
-
-
-
-#RUN mkdir -p /group/clas12/gemc/$COAT_VER/experiments
-#ADD experiments.tar /group/clas12/gemc/$COAT_VER
 WORKDIR /root/
 
-ENTRYPOINT ["/bin/tcsh"]
+ENTRYPOINT ["/opt/jlab_software/devel/gemc/bin/gemc","-USE_GUI=0"]
