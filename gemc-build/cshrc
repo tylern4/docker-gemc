@@ -1,4 +1,0 @@
-
-setenv JLAB_ROOT /opt/jlab_software
-setenv USER root
-source $JLAB_ROOT/devel/ce/jlab.csh

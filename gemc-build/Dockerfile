@@ -156,34 +156,38 @@ RUN git clone https://github.com/gemc/mlibrary.git $MLIBRARY \
     && scons -j$(nproc) OPT=1
 
 ## gemc
+ENV GEMC_VERSION 2.6
 RUN mkdir -p $GEMC \
-    && git clone https://github.com/gemc/source.git $GEMC \
     && cd $GEMC \
-    && rm -rf .git* \
-    && scons -j$(nproc) OPT=1
+    && curl -o gemc-$GEMC_VERSION.tar.gz $BASE_URL/gemc/gemc-$GEMC_VERSION.tar.gz \
+    && tar -xvf gemc-$GEMC_VERSION.tar.gz --strip-components 1 \
+    && rm -rf gemc-$GEMC_VERSION.tar.gz \
+    && scons OPT=1 -j$(nproc)
 
 ##Banks
-RUN mkdir -p $JLAB_SOFTWARE/banks \
-    && cd $JLAB_SOFTWARE/banks \
-    && curl -o banks-$BANKS_VERSION.tar.gz $BASE_URL/banks/banks-$BANKS_VERSION.tar.gz \
-    && tar -xvf banks-$BANKS_VERSION.tar.gz \
-    && rm -rf banks-$BANKS_VERSION.tar.gz \
-    && cd $BANKS_VERSION \
-    && scons -j$(nproc) OPT=1
+#ENV BANKS_VERSION 1.4
+#RUN mkdir -p $JLAB_SOFTWARE/banks \
+#    && cd $JLAB_SOFTWARE/banks \
+#    && curl -o banks-$BANKS_VERSION.tar.gz $BASE_URL/banks/banks_$BANKS_VERSION.tar.gz \
+#    && tar -xvf banks-$BANKS_VERSION.tar.gz --strip-components 1 \
+#    && rm -rf banks-$BANKS_VERSION.tar.gz \
+#    && scons -j$(nproc) OPT=1
 
 ##JANA_HOME
-RUN git clone https://github.com/JeffersonLab/JANA.git $JANA_HOME \
-    && cd $JANA_HOME \
-    && rm -rf .git* \
-    && scons -j$(nproc)
+#RUN git clone https://github.com/JeffersonLab/JANA.git $JANA_HOME \
+#    && cd $JANA_HOME \
+#    && rm -rf .git* \
+#    && scons -j$(nproc)
 
 ## Fields
-RUN mkdir -p $JLAB_ROOT/noarch/data \
-   && cd $JLAB_ROOT/noarch/data \
-   && rm -rf srr* clas12* \
-   && curl -o clas12SolenoidFieldMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12SolenoidFieldMap.dat \
-   && curl -o clas12TorusOriginalMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12TorusOriginalMap.dat
+#RUN mkdir -p $JLAB_ROOT/noarch/data \
+#   && cd $JLAB_ROOT/noarch/data \
+#   && rm -rf srr* clas12* \
+#   && curl -o clas12SolenoidFieldMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12SolenoidFieldMap.dat \
+#   && curl -o clas12TorusOriginalMap.dat http://clasweb.jlab.org/12gev/field_maps/clas12TorusOriginalMap.dat
 
 WORKDIR /root/
+COPY env.sh /root/.zshrc
+COPY env.sh /root/.bashrc
 
-ENTRYPOINT ["/opt/jlab_software/devel/gemc/bin/gemc","-USE_GUI=0"]
+ENTRYPOINT ["zsh"]
